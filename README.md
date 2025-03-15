@@ -1,6 +1,10 @@
 # RazerSynapse-batch-tools
 Мои `.bat`-скрипты для "Razer Synapse 3" 
 
+>[!tip]
+> - Cкачать репозиторий: [Download ZIP](https://github.com/N3M1X10/RazerSynapse-batch-tools/archive/refs/heads/master.zip)
+> - Для редактирования скачанных на вашем ПК `.bat`-файлов: **`ПКМ` -> `Изменить`**
+
 ### Файлы
 - `razer-restart.bat` - Перезапустить "Razer Synapse 3" и переподключить клавиатуру (тут надо много описать, позже будет инструкция)
 - `razer-disable.bat` - Полностью остановить Razer Synapse 3 
@@ -9,10 +13,6 @@
 
 # razer-restart.bat
 Перед запуском этого файла требуется проверить настройки внутри файла
-
->[!tip]
-> - Cкачать репозиторий: [Download ZIP](https://github.com/N3M1X10/RazerSynapse-batch-tools/archive/refs/heads/master.zip)
-> - Для редактирования скачанного на вашем ПК файла: **`ПКМ` -> `Изменить`**
 
 Пример пути для **Razer Synapse 3**
 ```bat
