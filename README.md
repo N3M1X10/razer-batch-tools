@@ -1,15 +1,17 @@
 # RazerSynapse-batch-tools
-My "Razer Synapse 3" batchfix
+Мои `.bat`-скрипты для "Razer Synapse 3" 
 
-`razer-restart.bat` - Перезапустить "Razer Synapse 3" и переподключить клавиатуру (тут надо много описать, позже будет инструкция)
-`razer-disable.bat` - Полностью остановить Razer Synapse 3 
-`razer-start.bat` - Запустить Razer Synapse
+### Файлы
+- `razer-restart.bat` - Перезапустить "Razer Synapse 3" и переподключить клавиатуру (тут надо много описать, позже будет инструкция)
+- `razer-disable.bat` - Полностью остановить Razer Synapse 3 
+- `razer-start.bat` - Запустить Razer Synapse
+- `bin/USBDeview.exe` - USBDeview, утилита, которая выведет список всех USB устройств, в данном случае помогает перезапустить клавиатуру.
 
 # razer-restart.bat
 Перед запуском этого файла требуется проверить настройки внутри файла
 
 >[!tip]
-> - Чтобы скачать файлы: [Ищем такую кнопку](https://github.com/user-attachments/assets/c0169211-4266-4d54-b594-22e762d0938b). А за подробностями [Сюда](https://docs.github.com/ru/get-started/start-your-journey/downloading-files-from-github) или [Сюда](https://blog.skillfactory.ru/kak-skachivat-s-github/)
+> - Cкачать репозиторий: [Download ZIP](https://github.com/N3M1X10/RazerSynapse-batch-tools/archive/refs/heads/master.zip)
 > - Для редактирования скачанного на вашем ПК файла: **`ПКМ` -> `Изменить`**
 
 Пример пути для **Razer Synapse 3**
