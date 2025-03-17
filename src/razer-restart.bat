@@ -41,17 +41,19 @@ echo ! stop service &powershell Stop-Service -Name 'Razer Game Manager Service' 
 echo ! stop service &powershell Stop-Service -Name 'Razer Synapse Service' -Force
 echo ! stop service &powershell Stop-Service -Name 'RzActionSvc' -Force
 
+:reboot-keyboard
 if %fix_keyboard%==1 (
-:reboot-hid-keyboard
+:: This usb names are unique! Please check your keyboard names in: bin/USBDeview.exe
 cls
 cd /d "%~dp0"
-:: This usb names are unique please check your keyboard in bin/USBDeview.exe
+if exist "bin/USBDeview.exe" (
 echo ! Restart keyboard
 start "bin/" "bin/USBDeview.exe" /RunAsAdmin /disable_enable "USB\VID_1532&PID_024E&MI_02\6&3860e76&0&0002"
->nul timeout /t 3 /nobreak
+>nul timeout /t 1 /nobreak
 start "bin/" "bin/USBDeview.exe" /RunAsAdmin /disable_enable "USB\VID_1532&PID_024E&MI_01\6&3860e76&0&0001"
->nul timeout /t 3 /nobreak
+>nul timeout /t 1 /nobreak
 echo ! Restarted
+) else (echo The utility is missing: USBDeview &pause)
 )
 
 :razer-on
@@ -68,10 +70,9 @@ echo ! start service &powershell Start-Service -Name 'RzActionSvc'
 
 cd /d "%synapse%"
 echo Razer App starting . . . &start "" "%synapse%\Razer Synapse 3.exe"
-echo.&echo [33mEND &>nul timeout /t 2
 
 
 :batch-stop
 endlocal
->nul timeout /t 3 /nobreak
+echo.&echo [33mEND &>nul timeout /t 2
 exit
