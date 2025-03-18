@@ -68,11 +68,12 @@ echo ! start service &powershell Start-Service -Name 'Razer Game Manager Service
 echo ! start service &powershell Start-Service -Name 'Razer Synapse Service'
 echo ! start service &powershell Start-Service -Name 'RzActionSvc'
 
+echo ! Razer Synapse App starting . . .
 cd /d "%synapse%"
-echo Razer App starting . . . &start "" "%synapse%\Razer Synapse 3.exe"
+start "" "Razer Synapse 3.exe"
 
 
 :batch-stop
 endlocal
-echo.&echo [33mEND &>nul timeout /t 2
+echo.&echo [92mEND &>nul timeout /t 2
 exit
