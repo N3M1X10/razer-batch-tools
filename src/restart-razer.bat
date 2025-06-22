@@ -12,6 +12,7 @@ setlocal EnableDelayedExpansion
 :: if "1" the script will try to restart your keyboard. 
 :: Please, provide your keyboard name below
 :: with this option SERVICES WILL BE RESTARTED anyway
+:: default: 1
 set fix_keyboard=1
 :: Set YOUR 'friendly' keyboard name
 set keyboard_name=Razer BlackWidow V3
@@ -19,20 +20,24 @@ set keyboard_name=Razer BlackWidow V3
 :: if "1" this will slow down the proccess, but should help with any issues if they will come
 :: very valuable function in any cases for troubleshooting
 :: disable this only if you sure what you doing!!!
+:: default: 1
 set affect_services=1
 
 :: razer synapse directory path
 set synapse=C:\Program Files (x86)\Razer\Synapse3\WPFUI\Framework\Razer Synapse 3 Host
 
 :: if "1" the script will try to hide pop-up windows of the Razer Synapse
+:: default: 1
 set silent=1
 
 :: set time in seconds until autoclose the cmd window
-:: 0 if you wouldn't close
+:: "0" if you wouldn't close
+:: default: 5
 set timeout=5
 
-:: if "1" forced apps taskkill. Use if has some issues
-set taskkill_force=0
+:: if "1" forced apps taskkill. Use "0" if has some issues
+:: default: 1
+set taskkill_force=1
 
 :: end of params
 
