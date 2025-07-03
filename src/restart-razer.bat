@@ -39,6 +39,10 @@ set timeout=5
 :: default: 1
 set taskkill_force=1
 
+:: ask to continue, before doing that things
+:: default: 0
+set ask_before=1
+
 :: end of params
 
 
@@ -54,6 +58,31 @@ if "%arg%" == "admin" (
 )
 
 
+
+if "%ask_before%"=="1" (
+    goto :ask
+) else (
+    goto :begin
+)
+
+:ask
+cls
+setlocal EnableDelayedExpansion
+
+echo [93mAre you sure you want to restart entire Razer Software?[0m
+
+echo [93m
+echo 1. Continue
+echo 0. Cancel
+echo [0m
+
+choice /c 10 /n /m "[93m[ Confirm ]"[0m
+if "%errorlevel%"=="1" cls&goto :begin
+if "%errorlevel%"=="2" (endlocal&exit)
+pause&exit/b
+
+
+:begin
 
 if %taskkill_force%==1 (
     :: forcing taskkill
