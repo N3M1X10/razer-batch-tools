@@ -19,10 +19,10 @@ set fix_keyboard=1
 set keyboard_name=Razer BlackWidow V3
 
 :: if "1" this will slow down the proccess, but should help with any issues if they will come
-:: very valuable function in any cases for troubleshooting
+:: this function may help in any cases for troubleshooting
 :: disable this only if you sure what you doing!!!
-:: default: '1'
-set affect_services=1
+:: default: ''
+set affect_services=
 
 :: if "1" the script will try to hide pop-up windows of the Razer Synapse
 :: default: '1'
@@ -35,7 +35,7 @@ set ask_before=0
 :: sets whether the window will be hidden
 :: [1 / or any else value]
 :: default: '0'
-set windowless=0
+set windowless=1
 
 
 :Dev-Params
@@ -406,7 +406,7 @@ if "%require_admin%" neq "1" (
     echo [caution] : !require_admin_msg2![0m
 )
 if "%debug%" neq "1" (
-    call :msg "!require_admin_msg1! !require_admin_msg2!" "Notification"
+    call :msg "!require_admin_msg1! !require_admin_msg2!"
 )
 echo.
 exit /b
