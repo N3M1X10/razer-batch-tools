@@ -7,20 +7,17 @@ chcp 65001>nul
 title Razer : Restart
 setlocal EnableDelayedExpansion
 
-
 :Params
 
-:: if "1" the script will try to restart your keyboard. 
-:: Please, provide your keyboard name below
-:: with this option SERVICES WILL BE RESTARTED anyway
+:: if "1" the script will try to restart your keyboard.
+:: Please, provide your 'keyboard_name' var below
 :: default: '1'
 set fix_keyboard=1
 :: Set YOUR 'friendly' keyboard name
 set keyboard_name=Razer BlackWidow V3
 
-:: if "1" this will slow down the proccess, but should help with any issues if they will come
-:: this function may help in any cases for troubleshooting
-:: disable this only if you sure what you doing!!!
+:: if "1" this will slow down the proccess (because razer svc's is very slow), but should help with any issues if they will come
+:: this function MAY help in any cases for troubleshooting
 :: default: ''
 set affect_services=
 
@@ -29,12 +26,12 @@ set affect_services=
 set silent=1
 
 :: ask to continue, before doing that things
-:: default: '0'
-set ask_before=0
+:: default: ''
+set ask_before=
 
 :: sets whether the window will be hidden
 :: [1 / or any else value]
-:: default: '0'
+:: default: '1'
 set windowless=1
 
 
@@ -42,8 +39,8 @@ set windowless=1
 ::debug mode
 :: [1 / or any else val]
 :: 1 - sets timeout to '60'
-:: default: '0'
-set debug=0
+:: default: ''
+set debug=
 
 :: this option will set this script to request admin rights
 :: this option REQUIRED to correct working of this script, and added only for very specific debugging
@@ -53,8 +50,8 @@ set require_admin=1
 
 :: set time in seconds until autoclose the cmd window
 :: "0" if you wouldn't close
-:: default: '2'
-set timeout=2
+:: default: '5'
+set timeout=5
 
 :: if "1" forced apps taskkill. Use "0" if has some issues
 :: default: '1'
@@ -84,10 +81,10 @@ set hdn_arg=%2
 
 :begin
 call :initialize
-call :razer-shutdown "disable"
 if "%mode%"=="1" (
+    call :razer-shutdown "disable"
     call :reboot-keyboard
-    call :razer-wakeup   
+    call :razer-wakeup 
 )
 
 
@@ -99,8 +96,8 @@ echo.&echo [92m^^!^^!^^!^^!^^!  All operations has completed  ^^!^^!^^!^^!^^![
 if "%debug%"=="1" (set timeout=60)
 
 if "%timeout%" gtr "0" (
-    echo Press any key to exit . . .
-    timeout /t %timeout%
+    echo.&echo Press any key to exit . . .
+    >nul timeout /t %timeout%
 ) else (
     pause
 )
@@ -172,7 +169,6 @@ if "%synapse_version%"=="4" (
     goto :close
 )
 
-if "%fix_keyboard%"=="1" (set affect_services=1)
 if "%affect_services%"=="1" (
     echo.
     echo [93mStopping services . . .[0m
