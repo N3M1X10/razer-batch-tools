@@ -1,4 +1,4 @@
-:: this script helps me with "Razer Synapse 3" bug, when unable to see my keyboard BlackWidowV3
+:: this script helps me with "Razer Synapse 3 and 4" bug, when unable to see my keyboard BlackWidowV3
 :: Hope i could help you! <3
 :: Source: https://github.com/N3M1X10/razer-batch-tools
 
@@ -21,6 +21,9 @@ set keyboard_name=Razer BlackWidow V3
 :: default: ''
 set affect_services=
 
+:: disables useless services
+set optimize_services=1
+
 :: if "1" the script will try to hide pop-up windows of the Razer Synapse
 :: default: '1'
 set silent=1
@@ -33,6 +36,14 @@ set ask_before=
 :: [1 / or any else value]
 :: default: '1'
 set windowless=1
+
+::Mode
+:: Sets whether the script will be in restart mode. 
+:: [1 / or any val]
+:: 1 - sets that the script is should restart the razer without services
+:: 2 - sets that the script is should restart without services and kill useless services permanently
+:: 3 - sets that the script is should restart entire content of razer
+set mode=2
 
 
 :Dev-Params
@@ -57,12 +68,6 @@ set timeout=5
 :: default: '1'
 set taskkill_force=1
 
-::Mode
-:: Sets whether the script will be in restart mode. 
-:: [1 / or any val]
-:: 1 - sets that the script is should restart the razer
-set mode=1
-
 
 :Constant-Params
 
@@ -82,9 +87,26 @@ set hdn_arg=%2
 :begin
 call :initialize
 if "%mode%"=="1" (
+    rem base restart to fix keyboard
+    set affect_services=
     call :razer-shutdown "disable"
     call :reboot-keyboard
-    call :razer-wakeup 
+    call :razer-wakeup
+
+) else if "%mode%"=="2" (
+    rem kill all and restart only neccessary (optimize)
+    set affect_services=
+    call :razer-shutdown "disable"
+    call :reboot-keyboard
+    call :razer-wakeup
+    call :optimize_services
+
+) else if "%mode%"=="3" (
+    rem entire restart with all content to be restored and fixing keyboard
+    set affect_services=1
+    call :razer-shutdown "disable"
+    call :reboot-keyboard
+    call :razer-wakeup "entire"
 )
 
 
@@ -96,7 +118,7 @@ echo.&echo [92m^^!^^!^^!^^!^^!  All operations has completed  ^^!^^!^^!^^!^^![
 if "%debug%"=="1" (set timeout=60)
 
 if "%timeout%" gtr "0" (
-    echo.&echo Press any key to exit . . .
+    echo.&echo Press any key to exit...
     >nul timeout /t %timeout%
 ) else (
     pause
@@ -140,7 +162,7 @@ exit /b
 
 
 :razer-shutdown
-echo [93mRazer apps stopping . . .[0m
+echo [93mRazer apps stopping...[0m
 
 if "%~1"=="disable" (
     set option1=%~1
@@ -169,20 +191,23 @@ if "%synapse_version%"=="4" (
     goto :close
 )
 
+:: option restart services too
 if "%affect_services%"=="1" (
     echo.
-    echo [93mStopping services . . .[0m
+    echo [93mStopping services...[0m
     if "%synapse_version%"=="3" (
         call :service "RzActionSvc" "stop" %~1
         call :service "Razer Synapse Service" "stop" %~1
         call :service "Razer Game Manager Service" "stop" %~1
 
     ) else if "%synapse_version%"=="4" (
+        call :service "Razer Chroma SDK Diagnostic Service" "stop" %~1
         call :service "Razer Chroma SDK Service" "stop" %~1
         call :service "Razer Chroma SDK Server" "stop" %~1
         call :service "Razer Chroma Stream Server" "stop" %~1
         call :service "Razer Game Manager Service 3" "stop" %~1
         call :service "Razer Elevation Service" "stop" %~1
+        call :service "HapticService" "stop" %~1
 
     ) else (
         echo [:razer-shutdown] ^: Wrong 'synapse_version' param
@@ -195,18 +220,25 @@ exit /b
 :razer-wakeup
 ::services
 if "%affect_services%"=="1" (
-    echo [93mStarting Razer services . . .[0m
+    echo [93mStarting Razer services...[0m
     if "%synapse_version%"=="3" (
         call :service "RzActionSvc" "start"
         call :service "Razer Synapse Service" "start"
-        call :service "Razer Game Manager Service" "start"
+
+        if "%~1"=="entire" (
+            call :service "Razer Game Manager Service" "start"
+        )
 
     ) else if "%synapse_version%"=="4" (
         call :service "Razer Chroma SDK Service" "start"
         call :service "Razer Chroma SDK Server" "start"
-        call :service "Razer Chroma Stream Server" "start"
-        call :service "Razer Game Manager Service 3" "start"
-        rem call :service "Razer Elevation Service" "start"
+
+        if "%~1"=="entire" (
+            call :service "Razer Chroma Stream Server" "start"
+            call :service "Razer Game Manager Service 3" "start"
+            call :service "Razer Chroma SDK Diagnostic Service" "start"
+            call :service "Razer Elevation Service" "start"
+        )
 
     ) else (
         msg * [%~n0%~x0] ^: Error. Missing Razer Synapse version. Script was interrupted
@@ -215,7 +247,7 @@ if "%affect_services%"=="1" (
 )
 
 echo.
-echo [93mStarting Razer Synapse App . . .[0m
+echo [93mStarting Razer Synapse App...[0m
 
 cd /d "!synapse!"
 if "%synapse_version%"=="4" (
@@ -229,7 +261,7 @@ if "%synapse_version%"=="4" (
 
 
 if "%silent%"=="1" (
-    echo [93mAnd trying to hide this pop-up garbage from your eyes . . .[0m
+    echo [93mAnd trying to hide this pop-up garbage from your eyes...[0m
     powershell -Command ^
     " while ($true) { "^
     "   $process = Get-Process | Where-Object {$_.MainWindowTitle -eq 'Razer Synapse'}; "^
@@ -249,7 +281,7 @@ exit /b
 if "%fix_keyboard%"=="1" (
     echo.
     cd /d "%~dp0"
-    echo [93mRestarting your keyboard . . .[0m
+    echo [93mRestarting your keyboard...[0m
     
     rem powershell
     powershell -Command ^
@@ -304,6 +336,23 @@ exit /b
 
 
 
+:optimize_services
+echo.
+echo disabling useless services...
+if "%synapse_version%"=="3" (
+    call :service "Razer Game Manager Service" "stop" "disable"
+) else if "%synapse_version%"=="4" (
+    call :service "Razer Game Manager Service 3" "stop" "disable"
+    call :service "Razer Chroma SDK Diagnostic Service" "stop" "disable"
+    call :service "Razer Elevation Service" "stop" "disable"
+    call :service "Razer Chroma Stream Server" "stop" "disable"
+    call :service "HapticService" "stop" "disable"
+)
+echo Done
+exit/b
+
+
+
 :service
 rem Examples
 rem call :service "RzActionSvc" "stop" "disable"
@@ -312,27 +361,24 @@ rem call :service "RzActionSvc" "start"
 set service=%~1
 
 set option1=%~2
+echo.
 if "%option1%"=="stop" (
     set option2=%~3
     if "%option2%"=="disable" (
-        echo.
-        echo disabling start type of: '%service%' . . .
+        echo disabling start type of: '%service%'...
         powershell Set-Service -Name '%service%' -StartupType Disabled
     )
-    echo.
-    echo stopping: '%service%' . . .
+    
+    echo stopping: '%service%'...
     powershell Stop-Service -Name '%service%' -Force
 
 ) else if "%option1%"=="start" (
-    echo.
-    echo restoring start type of: '%service%' . . .
+    echo restoring start type of: '%service%'...
     powershell Set-Service -Name '%service%' -StartupType Automatic
-    echo.
-    echo starting: '%service%' . . .
+    echo starting: '%service%'...
     powershell Start-Service -Name '%service%'
 
 ) else (
-    echo.
     echo [:service] ^: Error
     echo Args: 1:'%~1', 2:'%~2', 3:'%~3'
     exit /b 1
@@ -350,8 +396,8 @@ if "%debug%"=="1" (
             echo [93m[powershell] : Restarted with admin rights
             echo By the way, window is kept awake, because we is in debug[0m
         ) else (
-            echo [powershell] : Requesting admin rights . . .
-            powershell -Command "Start-Process 'cmd.exe' -ArgumentList '/k \"\"%~f0\" admin\"' -Verb RunAs"
+            echo [powershell] : Requesting admin rights...
+            powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Start-Process 'cmd.exe' -ArgumentList '/k \"\"%~f0\" admin\"' -Verb RunAs"
             exit
         )
     ) else (
@@ -365,8 +411,8 @@ if "%debug%"=="1" (
             if "%hdn_arg%" == "hidden" (
                 rem admin requested
             ) else (
-                echo [powershell] : Requesting admin rights and trying to hide the window . . .
-                powershell -Command "Start-Process 'cmd.exe' -ArgumentList '/k \"\"%~f0\" admin hidden\"' -Verb RunAs -WindowStyle Hidden"
+                echo [powershell] : Requesting admin rights and trying to hide the window...
+                powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Start-Process 'cmd.exe' -ArgumentList '/k \"\"%~f0\" admin hidden\"' -Verb RunAs -WindowStyle Hidden"
                 exit
             )
         ) else (
@@ -374,8 +420,8 @@ if "%debug%"=="1" (
             if "%adm_arg%" == "admin" (
                 rem admin requested
             ) else (
-                echo [powershell] : Requesting admin rights . . .
-                powershell -Command "Start-Process 'cmd.exe' -ArgumentList '/k \"\"%~f0\" admin hidden\"' -Verb RunAs"
+                echo [powershell] : Requesting admin rights...
+                powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Start-Process 'cmd.exe' -ArgumentList '/k \"\"%~f0\" admin hidden\"' -Verb RunAs"
                 exit
             )
         )
