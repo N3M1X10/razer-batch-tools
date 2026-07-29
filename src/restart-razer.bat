@@ -42,7 +42,7 @@ set windowless=1
 :: [1 / or any val]
 :: 1 - sets that the script is should restart the razer without services
 :: 2 - sets that the script is should restart without services and kill useless services permanently
-:: 3 - sets that the script is should restart entire content of razer
+:: 3 - sets that the script is should restart entire content of razer (AND RESTORE DEFAULTS)
 set mode=2
 
 
@@ -61,8 +61,8 @@ set require_admin=1
 
 :: set time in seconds until autoclose the cmd window
 :: "0" if you wouldn't close
-:: default: '5'
-set timeout=5
+:: default: '3'
+set timeout=3
 
 :: if "1" forced apps taskkill. Use "0" if has some issues
 :: default: '1'
@@ -238,6 +238,7 @@ if "%affect_services%"=="1" (
             call :service "Razer Game Manager Service 3" "start"
             call :service "Razer Chroma SDK Diagnostic Service" "start"
             call :service "Razer Elevation Service" "start"
+            call :service "HapticService" "start" "enable"
         )
 
     ) else (
