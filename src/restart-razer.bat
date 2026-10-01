@@ -260,19 +260,59 @@ if "%synapse_version%"=="4" (
     goto :close
 )
 
+:close-razer-windows
 
 if "%silent%"=="1" (
     echo [93mAnd trying to hide this pop-up garbage from your eyes...[0m
-    powershell -Command ^
-    " while ($true) { "^
-    "   $process = Get-Process | Where-Object {$_.MainWindowTitle -eq 'Razer Synapse'}; "^
-    "   if ($process) { "^
-    "       Write-Host 'I have sent commands to close these garbage windows^!' -Foregroundcolor Green; "^
-    "       $process.CloseMainWindow() | Out-Null;  "^
-    "       break; "^
-    "       exit 0 "^
-    "   } "^
-    " } "
+
+    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$windowTitles = @('Razer Synapse','Razer Chroma');" ^
+    "$quietChecks = 0;" ^
+    "$checksTarget = 5;" ^
+    "$user32Ready = $false;" ^
+    "try {" ^
+    "    Add-Type -TypeDefinition ('using System;' + [Environment]::NewLine + 'using System.Text;' + [Environment]::NewLine + 'using System.Runtime.InteropServices;' + [Environment]::NewLine + 'public static class WindowTools {' + [Environment]::NewLine + 'public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);' + [Environment]::NewLine + '[DllImport(\"user32.dll\")] public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);' + [Environment]::NewLine + '[DllImport(\"user32.dll\", CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);' + [Environment]::NewLine + '[DllImport(\"user32.dll\")] public static extern bool IsWindowVisible(IntPtr hWnd);' + [Environment]::NewLine + '[DllImport(\"user32.dll\")] public static extern IntPtr PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);' + [Environment]::NewLine + 'public const uint WM_CLOSE = 0x0010;' + [Environment]::NewLine + '}') | Out-Null;" ^
+    "    $user32Ready = $true;" ^
+    "} catch {" ^
+    "    Write-Host 'Window API unavailable - process method only.' -ForegroundColor Yellow;" ^
+    "}" ^
+    "while ($quietChecks -lt $checksTarget) {" ^
+    "    $found = $false;" ^
+    "    @(Get-Process) | ForEach-Object {" ^
+    "        try {" ^
+    "            $_.Refresh();" ^
+    "            if ($windowTitles -contains $_.MainWindowTitle -and $_.MainWindowHandle -ne 0) {" ^
+    "                $found = $true;" ^
+    "                Write-Host ('Closing via process: ' + $_.MainWindowTitle) -ForegroundColor Green;" ^
+    "                $null = $_.CloseMainWindow();" ^
+    "            }" ^
+    "        } catch {}" ^
+    "    };" ^
+    "    if ($user32Ready) {" ^
+    "        $null = [WindowTools]::EnumWindows({" ^
+    "            param($hWnd,$lParam);" ^
+    "            if (-not [WindowTools]::IsWindowVisible($hWnd)) { return $true };" ^
+    "            $buffer = New-Object System.Text.StringBuilder 512;" ^
+    "            $null = [WindowTools]::GetWindowText($hWnd,$buffer,$buffer.Capacity);" ^
+    "            $title = $buffer.ToString();" ^
+    "            if ($windowTitles -contains $title) {" ^
+    "                $script:found = $true;" ^
+    "                Write-Host ('Closing real window: ' + $title) -ForegroundColor Green;" ^
+    "                $null = [WindowTools]::PostMessage($hWnd,[WindowTools]::WM_CLOSE,[IntPtr]::Zero,[IntPtr]::Zero);" ^
+    "            };" ^
+    "            return $true;" ^
+    "        },[IntPtr]::Zero);" ^
+    "    };" ^
+    "    if ($found) {" ^
+    "        $quietChecks = 0;" ^
+    "        Start-Sleep -Milliseconds 200;" ^
+    "    } else {" ^
+    "        $quietChecks++;" ^
+    "        Write-Host ('[' + $quietChecks + '/' + $checksTarget + '] Sniffing for poopie-window...') -ForegroundColor Yellow;" ^
+    "        Start-Sleep -Milliseconds 200;" ^
+    "    }" ^
+    "}"
+
 )
 exit /b
 
