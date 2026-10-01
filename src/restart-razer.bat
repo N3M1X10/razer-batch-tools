@@ -392,7 +392,7 @@ if "%synapse_version%"=="3" (
     call :service "Razer Game Manager Service" "stop" "disable"
 ) else if "%synapse_version%"=="4" (
     call :service "Razer Game Manager Service 3" "stop" "disable"
-    call :service "Razer Chroma SDK Diagnostic Service" "stop" "disable"
+    rem call :service "Razer Chroma SDK Diagnostic Service" "stop" "disable"
     call :service "Razer Elevation Service" "stop" "disable"
     call :service "Razer Chroma Stream Server" "stop" "disable"
     call :service "HapticService" "stop" "disable"
