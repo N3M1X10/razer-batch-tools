@@ -43,6 +43,7 @@ set windowless=
 :: 1 - sets that the script is should restart the razer without services
 :: 2 - sets that the script is should restart without services and kill useless services permanently
 :: 3 - sets that the script is should restart entire content of razer (AND RESTORE DEFAULTS)
+:: 4 - sets that the script is should do fast restart, recomended for some debug
 set mode=2
 
 
@@ -107,6 +108,12 @@ if "%mode%"=="1" (
     call :razer-shutdown "disable"
     call :reboot-keyboard
     call :razer-wakeup "entire"
+
+) else if "%mode%"=="4" (
+    rem base fast test-restart
+    set affect_services=
+    call :razer-shutdown "disable"
+    call :razer-wakeup
 )
 
 
