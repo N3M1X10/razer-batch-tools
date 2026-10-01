@@ -125,8 +125,9 @@ echo.&echo [92m^^!^^!^^!^^!^^!  All operations has completed  ^^!^^!^^!^^!^^![
 if "%debug%"=="1" (set timeout=60)
 
 if "%timeout%" gtr "0" (
-    echo.&echo Press any key to exit...
-    >nul timeout /t %timeout%
+    echo.&echo [93mPress any key to exit...
+    timeout /t %timeout%
+    echo [0m
 ) else (
     pause
 )
