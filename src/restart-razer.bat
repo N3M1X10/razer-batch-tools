@@ -21,9 +21,6 @@ set keyboard_name=Razer BlackWidow V3
 :: default: ''
 set affect_services=
 
-:: disables useless services
-set optimize_services=1
-
 :: if "1" the script will try to hide pop-up windows of the Razer Synapse
 :: default: '1'
 set silent=1
