@@ -32,7 +32,7 @@ set ask_before=
 :: sets whether the SCRIPT console window will be hidden
 :: [1 / or any else value]
 :: default: '1'
-set windowless=
+set windowless=1
 
 ::Mode
 :: Sets whether the script will be in restart mode. 
