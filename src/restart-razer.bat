@@ -405,35 +405,61 @@ exit/b
 
 
 :service
-rem Examples
+rem Examples:
 rem call :service "RzActionSvc" "stop" "disable"
 rem call :service "RzActionSvc" "start"
 
-set service=%~1
+set "SVC_NAME=%~1"
+set "SVC_ACTION=%~2"
+set "SVC_OPTION=%~3"
 
-set option1=%~2
 echo.
-if "%option1%"=="stop" (
-    set option2=%~3
-    if "%option2%"=="disable" (
-        echo disabling start type of: '%service%'...
-        powershell Set-Service -Name '%service%' -StartupType Disabled
-    )
-    
-    echo stopping: '%service%'...
-    powershell Stop-Service -Name '%service%' -Force
+echo [SERVICE] %SVC_NAME% - %SVC_ACTION%
 
-) else if "%option1%"=="start" (
-    echo restoring start type of: '%service%'...
-    powershell Set-Service -Name '%service%' -StartupType Automatic
-    echo starting: '%service%'...
-    powershell Start-Service -Name '%service%'
-
+if /i "%SVC_ACTION%"=="stop" (
+    powershell.exe -NoProfile -Command ^
+        "$ErrorActionPreference='Stop';" ^
+        "$n=$env:SVC_NAME;" ^
+        "$s=Get-Service -Name $n;" ^
+        "$c=Get-CimInstance Win32_Service | Where-Object Name -eq $n;" ^
+        "Write-Host ('  Status: '+$s.Status+'; Startup: '+$c.StartMode);" ^
+        "if ($env:SVC_OPTION -eq 'disable') {" ^
+        "    if ($c.StartMode -ne 'Disabled') {" ^
+        "        Set-Service -Name $n -StartupType Disabled;" ^
+        "        Write-Host '  [OK] Startup type set to Disabled' " ^
+        "    } else { Write-Host '  [SKIP] Startup already Disabled' }" ^
+        "};" ^
+        "if ($s.Status -ne 'Stopped') {" ^
+        "    Stop-Service -Name $n -Force;" ^
+        "    Write-Host '  [OK] Service stopped' " ^
+        "} else { Write-Host '  [SKIP] Service already stopped' }"
+) else if /i "%SVC_ACTION%"=="start" (
+    powershell.exe -NoProfile -Command ^
+        "$ErrorActionPreference='Stop';" ^
+        "$n=$env:SVC_NAME;" ^
+        "$s=Get-Service -Name $n;" ^
+        "$c=Get-CimInstance Win32_Service | Where-Object Name -eq $n;" ^
+        "Write-Host ('  Status: '+$s.Status+'; Startup: '+$c.StartMode);" ^
+        "if ($c.StartMode -ne 'Auto') {" ^
+        "    Set-Service -Name $n -StartupType Automatic;" ^
+        "    Write-Host '  [OK] Startup type set to Automatic' " ^
+        "} else { Write-Host '  [SKIP] Startup already Automatic' };" ^
+        "if ($s.Status -ne 'Running') {" ^
+        "    Start-Service -Name $n;" ^
+        "    Write-Host '  [OK] Service started' " ^
+        "} else { Write-Host '  [SKIP] Service already running' }"
 ) else (
-    echo [:service] ^: Error
-    echo Args: 1:'%~1', 2:'%~2', 3:'%~3'
+    echo [ERROR] Unknown action: "%SVC_ACTION%"
+    echo Usage: call :service "ServiceName" "stop" ["disable"] ^| "start"
     exit /b 1
 )
+
+if errorlevel 1 (
+    echo [ERROR] Operation failed for %SVC_NAME%
+    exit /b 1
+)
+
+echo [DONE] %SVC_NAME%
 exit /b
 
 
