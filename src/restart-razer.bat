@@ -123,7 +123,7 @@ if "%debug%"=="1" (set timeout=60)
 
 if "%timeout%" gtr "0" (
     echo.&echo [93mPress any key to exit...
-    timeout /t %timeout%
+    >nul timeout /t %timeout%
     echo [0m
 ) else (
     pause
