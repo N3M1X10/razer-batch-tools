@@ -26,6 +26,7 @@ set affect_services=
 set silent=1
 
 :: ask to continue, before doing that things
+:: [1 / or any else value]
 :: default: ''
 set ask_before=
 
@@ -35,19 +36,19 @@ set ask_before=
 set windowless=1
 
 ::Mode
-:: Sets whether the script will be in restart mode. 
+:: Sets which restart mode the script will be in
 :: [1 / or any val]
-:: 1 - sets that the script is should restart the razer without services
-:: 2 - sets that the script is should restart without services and kill useless services permanently
-:: 3 - sets that the script is should restart entire content of razer (AND RESTORE DEFAULTS)
-:: 4 - sets that the script is should do fast restart, recomended for some debug
+:: 0 - do restart entire content of razer (AND RESTORE DEFAULTS)
+:: 1 - do restart the razer without services (RECOMMENDED)
+:: 2 - do restart without services and freeze useless services (OPTIMIZE) [!!!WARNING!!!, Razer updates may break some things in this mode]
+:: 3 - do fast restart (DEBUG)
 set mode=2
 
 
 :Dev-Params
 ::debug mode
 :: [1 / or any else val]
-:: 1 - sets timeout to '60'
+:: 1 - sets timeout to '60' and keeping window on the screen
 :: default: ''
 set debug=
 
@@ -84,42 +85,58 @@ set hdn_arg=%2
 
 :begin
 call :initialize
-if "%mode%"=="1" (
-    rem base restart to fix keyboard
-    set affect_services=
-    call :razer-shutdown "disable"
-    call :reboot-keyboard
-    call :razer-wakeup
-
-) else if "%mode%"=="2" (
-    rem kill all and restart only neccessary (optimize)
-    set affect_services=
-    call :razer-shutdown "disable"
-    call :reboot-keyboard
-    call :razer-wakeup
-    call :optimize_services
-
-) else if "%mode%"=="3" (
+if "%mode%"=="0" (
     rem entire restart with all content to be restored and fixing keyboard
     set affect_services=1
     call :razer-shutdown "disable"
     call :reboot-keyboard
     call :razer-wakeup "entire"
 
-) else if "%mode%"=="4" (
-    rem base fast test-restart
-    set affect_services=
-    call :razer-shutdown "disable"
+) else if "%mode%"=="1" (
+    rem base restart to fix keyboard
+    set affect_services=0
+    call :razer-shutdown
+    call :reboot-keyboard
     call :razer-wakeup
+
+) else if "%mode%"=="2" (
+    rem kill all and restart only neccessary (optimize)
+    set affect_services=0
+    call :razer-shutdown "disable"
+    call :reboot-keyboard
+    call :razer-wakeup
+    call :optimize_services
+
+) else if "%mode%"=="3" (
+    rem fast debug-restart
+    set affect_services=0
+    call :razer-shutdown
+    call :razer-wakeup
+
+) else (
+    echo.
+    if "%mode%"=="" (
+        echo [91mMissing 'mode' param
+    ) else (
+        echo [91mWrong 'mode' param
+    )
+    call :close "nothing-to-do"
 )
 
 
 
 
 :close
-echo.&echo [92m^^!^^!^^!^^!^^!  All operations has completed  ^^!^^!^^!^^!^^![0m
+if "%~1"=="nothing-to-do" (
+    echo [90mSeems there is nothing to do ^:^(
+) else (
+    echo.&echo [92m^^!^^!^^!^^!^^!  All operations has completed  ^^!^^!^^!^^!^^![0m
+)
 
-if "%debug%"=="1" (set timeout=60)
+if "%debug%"=="1" (
+    set "timeout=60"
+    echo [90m!timeout! seconds console window ttl
+)
 
 if "%timeout%" gtr "0" (
     echo.&echo [93mPress any key to exit...
@@ -144,6 +161,11 @@ if "%ask_before%"=="1" (
     call :request-admin-rights
 )
 
+if "%debug%"=="1" (
+    :: keep window on screen when in debug
+    set windowless=0
+)
+
 ::try to define synapse version
 if exist "!synapse4!" (
 rem init the Synapse4
@@ -160,7 +182,7 @@ set synapse_version=3
 ) else (
     rem error
     msg * [%~n0%~x0] ^: Error. Razer Synapse has not found in configured directories. Seems it's not installed. Script was interrupted
-    goto :close
+    call :close "nothing-to-do"
 )
 exit /b
 
@@ -169,6 +191,7 @@ exit /b
 :razer-shutdown
 echo [93mRazer apps stopping...[0m
 
+:: 'disable' is to freeze the services of razer
 if "%~1"=="disable" (
     set option1=%~1
 ) else (
@@ -206,13 +229,18 @@ if "%affect_services%"=="1" (
         call :service "Razer Game Manager Service" "stop" %~1
 
     ) else if "%synapse_version%"=="4" (
+        call :service "RazerExperienceService" "stop" %~1
+
+        call :service "Razer Game Manager Service 3" "stop" %~1
+        call :service "RGS" "stop" %~1
+
         call :service "Razer Chroma SDK Diagnostic Service" "stop" %~1
         call :service "Razer Chroma SDK Service" "stop" %~1
         call :service "Razer Chroma SDK Server" "stop" %~1
         call :service "Razer Chroma Stream Server" "stop" %~1
-        call :service "Razer Game Manager Service 3" "stop" %~1
-        call :service "Razer Elevation Service" "stop" %~1
+
         call :service "HapticService" "stop" %~1
+        call :service "Razer Elevation Service" "stop" %~1
 
     ) else (
         echo [:razer-shutdown] ^: Wrong 'synapse_version' param
@@ -235,15 +263,20 @@ if "%affect_services%"=="1" (
         )
 
     ) else if "%synapse_version%"=="4" (
-        call :service "Razer Chroma SDK Service" "start"
-        call :service "Razer Chroma SDK Server" "start"
+        call :service "RazerExperienceService" "start"
 
         if "%~1"=="entire" (
-            call :service "Razer Chroma Stream Server" "start"
             call :service "Razer Game Manager Service 3" "start"
+            call :service "RGS" "start"
+
             call :service "Razer Chroma SDK Diagnostic Service" "start"
+            call :service "Razer Chroma SDK Service" "start"
+            call :service "Razer Chroma SDK Server" "start"
+
+            call :service "Razer Chroma Stream Server" "start"
+
+            call :service "HapticService" "start"
             call :service "Razer Elevation Service" "start"
-            call :service "HapticService" "start" "enable"
         )
 
     ) else (
@@ -268,7 +301,7 @@ if "%synapse_version%"=="4" (
 :close-razer-windows
 
 if "%silent%"=="1" (
-    echo [93mAnd trying to hide this pop-up garbage from your eyes...[0m
+    echo [90m[Powershell ASYNC script] And trying to hide this pop-up garbage from your eyes...[0m
     rem starting async ps1 script... let's do some chaos in console output
     start "" /B powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
     "$windowTitles = @('Razer Synapse','Razer Chroma');" ^
@@ -317,11 +350,11 @@ if "%silent%"=="1" (
     "        Start-Sleep -Milliseconds 100;" ^
     "    } else {" ^
     "        $quietChecks++;" ^
-    "        Write-Host ('[' + $quietChecks + '/' + $checksTarget + '] sniffing for poopie-window...') -fore Yellow;" ^
+    "        Write-Host ('[' + $quietChecks + '/' + $checksTarget + '] sniffing for poopie-window...') -fore DarkGray;" ^
     "        Start-Sleep -Milliseconds 100;" ^
     "    }" ^
     "}" ^
-    "Write-Host 'All garbage windows has eliminated!' -fore Cyan"
+    "Write-Host '[Powershell ASYNC script ^: Done ] All garbage windows has eliminated^!' -fore DarkGray"
 )
 
 exit /b
@@ -394,13 +427,30 @@ if "%synapse_version%"=="3" (
     call :service "Razer Game Manager Service" "stop" "disable"
 ) else if "%synapse_version%"=="4" (
     call :service "Razer Game Manager Service 3" "stop" "disable"
-    rem call :service "Razer Chroma SDK Diagnostic Service" "stop" "disable"
-    call :service "Razer Elevation Service" "stop" "disable"
+    call :service "RGS" "stop" "disable"
+
+    call :service "Razer Chroma SDK Service" "stop" "disable"
+    call :service "Razer Chroma SDK Diagnostic Service" "stop" "disable"
+    call :service "Razer Chroma SDK Server" "stop" "disable"
+
     call :service "Razer Chroma Stream Server" "stop" "disable"
+
     call :service "HapticService" "stop" "disable"
+    call :service "Razer Elevation Service" "stop" "disable"
 )
 echo Done
 exit/b
+
+
+:: search services of razer for updates (ps-note)
+Get-CimInstance Win32_Service |
+    Where-Object {
+        $_.Name -match 'Razer' -or
+        $_.DisplayName -match 'Razer'
+    } |
+    Select-Object Name, DisplayName, State, StartMode, PathName |
+    Format-List
+
 
 
 
@@ -414,7 +464,7 @@ set "SVC_ACTION=%~2"
 set "SVC_OPTION=%~3"
 
 echo.
-echo [SERVICE] %SVC_NAME% - %SVC_ACTION%
+echo [90m[SERVICE] %SVC_NAME% - %SVC_ACTION%
 
 if /i "%SVC_ACTION%"=="stop" (
     powershell.exe -NoProfile -Command ^
@@ -459,7 +509,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [DONE] %SVC_NAME%
+echo [90m[DONE] %SVC_NAME%[0m
 exit /b
 
 
